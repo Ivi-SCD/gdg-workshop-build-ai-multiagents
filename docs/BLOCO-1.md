@@ -44,32 +44,28 @@ cp .env.example .env
 # Edite o .env e cole sua GOOGLE_API_KEY
 ```
 
-### Testando a API Key
 
-```python
-# test_api.py
-
-import os
-from dotenv import load_dotenv
-from google import genai
-
-load_dotenv()
-
-client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-
-response = client.models.generate_content(
-    model="gemini-2.0-flash",
-    contents="Explique o que é um agente de IA em uma frase."
-)
-
-print(response.text)
-```
+### Criando o agente com ADK
 
 ```bash
-python test_api.py
+adk create profile_agent
 ```
 
-Se obteve uma resposta, estamos prontos.
+Durante a criação, selecione:
+
+```
+1. Choose a model for the root agent:
+   1. gemini-2.5-flash
+   2. Other models (fill later)
+   Choose model (1, 2): 1
+2. Google AI
+3. Vertex AI
+4. Login with Google
+   Choose a backend (1, 2, 3): 1
+
+Enter Google API key: adicionar a chave de api copiada
+```
+
 
 ## 1.3 Estrutura de um agente no ADK
 
@@ -77,7 +73,7 @@ No ADK, cada agente é um **módulo Python** dentro de uma pasta com um `__init_
 
 ```
 agents/
-└── meu_agente/
+└── profile_agent/
     ├── __init__.py    # Exporta root_agent
     └── agent.py       # Define o agente
 ```
@@ -97,14 +93,15 @@ Conceitos fundamentais:
 
 Nosso primeiro agente vai avaliar o perfil de risco do usuário (conservador, moderado, arrojado, agressivo) através de uma conversa e uma tool de classificação.
 
-### Passo 1 — Criar a estrutura de pastas
+### Passo 1 — Ajustar a estrutura de pastas
+
+Se você já tem a pasta `profile_agent`, crie apenas a pasta `agents` e mova `profile_agent` para dentro dela:
 
 ```bash
-mkdir -p agents/profile_agent
-touch agents/__init__.py
-touch agents/profile_agent/__init__.py
-touch agents/profile_agent/agent.py
+mkdir -p agents
+mv profile_agent agents/
 ```
+
 
 ### Passo 2 — Definir a tool de classificação
 
@@ -113,7 +110,7 @@ A tool é uma função Python comum. O ADK usa o docstring e as type hints para 
 ```python
 # agents/profile_agent/agent.py
 
-from google.adk.agents import Agent
+from google.adk.agents.llm_agent import Agent
 
 
 def classify_profile(
@@ -181,7 +178,7 @@ Adicione o agente no mesmo arquivo, logo após a tool:
 
 profile_agent = Agent(
     name="profile_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="Agente que avalia o perfil de investidor do usuário através de perguntas.",
     instruction="""
     Você é um agente especializado em avaliação de perfil de investidor.
@@ -227,65 +224,6 @@ Agente: Ótimo! Vou te fazer algumas perguntas...
 ```
 
 O agente deve fazer as perguntas, chamar a tool `classify_profile` automaticamente e apresentar o resultado.
-
-### Passo 6 — Testar via código
-
-```python
-# test_agent.py
-
-import os
-import sys
-import asyncio
-from dotenv import load_dotenv
-
-load_dotenv()
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "agents"))
-
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.genai.types import Content, Part
-
-from profile_agent import root_agent
-
-
-async def main():
-    session_service = InMemorySessionService()
-    runner = Runner(
-        agent=root_agent,
-        app_name="workshop",
-        session_service=session_service,
-    )
-
-    session = await session_service.create_session(
-        app_name="workshop",
-        user_id="user",
-    )
-
-    message = Content(
-        role="user",
-        parts=[Part(text="Quero descobrir meu perfil de investidor")],
-    )
-
-    response = runner.run(
-        user_id="user",
-        session_id=session.id,
-        new_message=message,
-    )
-
-    async for event in response:
-        if event.content and event.content.parts:
-            for part in event.content.parts:
-                if part.text:
-                    print(part.text)
-
-
-asyncio.run(main())
-```
-
-```bash
-python test_agent.py
-```
 
 ## 1.5 Conceitos-chave aprendidos
 
