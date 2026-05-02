@@ -45,11 +45,10 @@ cp .env.example .env
 
 | Bloco | Tema | Doc |
 |-------|------|-----|
-| 1 | Google AI Studio — conceitos e playground | [BLOCO-1](docs/BLOCO-1.md) |
-| 2 | Primeiro agente com Google ADK | [BLOCO-2](docs/BLOCO-2.md) |
-| 3 | Agentes especializados (RAG, Perfil, Mercado) | [BLOCO-3](docs/BLOCO-3.md) |
-| 4 | Agente de Relatório + Google Sheets | [BLOCO-4](docs/BLOCO-4.md) |
-| 5 | Orquestrador e sistema multi-agent completo | [BLOCO-5](docs/BLOCO-5.md) |
+| 1 | Google ADK + Primeiro Agente (Perfil de Investidor) | [BLOCO-1](docs/BLOCO-1.md) |
+| 2 | Agente RAG (Base de Conhecimento) | [BLOCO-2](docs/BLOCO-2.md) |
+| 3 | Agente de Mercado + Agente de Relatório | [BLOCO-3](docs/BLOCO-3.md) |
+| 4 | Orquestrador e Sistema Multi-Agent Completo | [BLOCO-4](docs/BLOCO-4.md) |
 
 ## Estrutura do projeto
 

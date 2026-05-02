@@ -1,206 +1,301 @@
-# Bloco 4 — Agente de Relatório + Google Sheets
+# Bloco 4 — Sistema Multi-Agent Completo
 
-Neste bloco vamos criar o agente que gera relatórios consolidados e exporta para Google Sheets.
+Neste bloco final vamos unir todos os agentes com um **orquestrador** que delega tarefas automaticamente, construindo o sistema multi-agent completo.
 
-## 4.1 Configurando o Google Sheets API
+## 4.1 Arquitetura Multi-Agent no ADK
 
-### Passo 1 — Criar uma Service Account
+No Google ADK, um agente pode ter **sub_agents**. O agente pai (orquestrador) decide automaticamente qual sub-agent chamar com base na `description` de cada um.
 
-1. Acesse o [Google Cloud Console](https://console.cloud.google.com/)
-2. Selecione seu projeto (ou crie um)
-3. Vá em **APIs & Services > Enable APIs** e habilite **Google Sheets API** e **Google Drive API**
-4. Vá em **APIs & Services > Credentials**
-5. Clique em **Create Credentials > Service Account**
-6. Dê um nome (ex: `workshop-sheets`)
-7. Clique em **Done**
-8. Clique na service account criada > **Keys > Add Key > Create new key > JSON**
-9. Salve o arquivo como `credentials.json` na raiz do projeto
-
-> **Importante**: adicione `credentials.json` ao `.gitignore` (já está lá).
-
-### Passo 2 — Compartilhar a planilha
-
-1. Crie uma planilha no Google Sheets
-2. Compartilhe com o email da service account (encontrado no JSON, campo `client_email`)
-3. Dê permissão de **Editor**
-
-### Passo 3 — Atualizar o .env
-
-```bash
-# Adicione ao .env
-GOOGLE_SHEETS_CREDENTIALS=credentials.json
-GOOGLE_SHEETS_SPREADSHEET_ID=id-da-sua-planilha
+```
+                    ┌────────────────────┐
+                    │   Orquestrador     │
+                    │   (coordena tudo)  │
+                    └─────────┬──────────┘
+                              │
+          ┌───────────┬───────┴───────┬────────────┐
+          │           │               │            │
+    ┌─────▼─────┐ ┌──▼──────┐ ┌─────▼──────┐ ┌───▼────────┐
+    │  Perfil   │ │   RAG   │ │  Mercado   │ │ Relatório  │
+    │ Investidor│ │         │ │            │ │ + Sheets   │
+    └───────────┘ └─────────┘ └────────────┘ └────────────┘
+     classify_     search_      get_stock_     export_report_
+     profile()     knowledge_   quote()        to_sheets()
+                   base()       get_stock_     list_reports()
+                                history()
+                                get_currency_
+                                rate()
+                                get_selic_
+                                rate()
 ```
 
-O ID da planilha está na URL: `https://docs.google.com/spreadsheets/d/{ID}/edit`
+O fluxo:
+1. Usuário faz uma pergunta ao orquestrador
+2. Orquestrador analisa a `description` de cada sub-agent
+3. Delega para o agente mais adequado
+4. Sub-agent responde usando suas tools
+5. Orquestrador pode chamar múltiplos agentes em sequência
+6. Retorna a resposta consolidada ao usuário
 
-## 4.2 Criando a tool de Google Sheets
-
-```python
-# tools/sheets_tool.py
-
-import os
-import json
-from datetime import datetime
-
-import gspread
-from google.oauth2.service_account import Credentials
-
-
-def _get_sheets_client():
-    """Cria o cliente autenticado do Google Sheets."""
-    creds_file = os.getenv("GOOGLE_SHEETS_CREDENTIALS", "credentials.json")
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
-    ]
-    creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
-    return gspread.authorize(creds)
-
-
-def export_report_to_sheets(
-    report_title: str,
-    investor_profile: str,
-    recommended_allocation: str,
-    market_data: str,
-    analysis_summary: str,
-) -> dict:
-    """Exporta um relatório de análise de investimentos para o Google Sheets.
-
-    Args:
-        report_title: Título do relatório.
-        investor_profile: Perfil do investidor (Conservador, Moderado, Arrojado, Agressivo).
-        recommended_allocation: Alocação recomendada.
-        market_data: Dados de mercado coletados (texto formatado).
-        analysis_summary: Resumo da análise e recomendações.
-
-    Returns:
-        dict com status e link da planilha.
-    """
-    try:
-        client = _get_sheets_client()
-        spreadsheet_id = os.getenv("GOOGLE_SHEETS_SPREADSHEET_ID")
-
-        if not spreadsheet_id:
-            return {"error": "GOOGLE_SHEETS_SPREADSHEET_ID não configurado no .env"}
-
-        spreadsheet = client.open_by_key(spreadsheet_id)
-
-        sheet_name = f"Relatório {datetime.now().strftime('%d/%m/%Y %H:%M')}"
-        worksheet = spreadsheet.add_worksheet(title=sheet_name, rows=20, cols=5)
-
-        worksheet.update("A1:B1", [["Relatório de Investimentos", ""]])
-        worksheet.update("A2:B2", [["Título", report_title]])
-        worksheet.update("A3:B3", [["Data", datetime.now().strftime("%d/%m/%Y %H:%M")]])
-        worksheet.update("A4:B4", [["Perfil do Investidor", investor_profile]])
-        worksheet.update("A5:B5", [["Alocação Recomendada", recommended_allocation]])
-        worksheet.update("A7:A7", [["Dados de Mercado"]])
-        worksheet.update("A8:A8", [[market_data]])
-        worksheet.update("A10:A10", [["Análise e Recomendações"]])
-        worksheet.update("A11:A11", [[analysis_summary]])
-
-        worksheet.format("A1:B1", {"textFormat": {"bold": True, "fontSize": 14}})
-        worksheet.format("A2:A11", {"textFormat": {"bold": True}})
-
-        return {
-            "status": "success",
-            "message": f"Relatório exportado com sucesso para a aba '{sheet_name}'.",
-            "spreadsheet_url": f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}",
-            "sheet_name": sheet_name,
-        }
-    except Exception as e:
-        return {"error": f"Erro ao exportar para Google Sheets: {str(e)}"}
-
-
-def list_reports() -> dict:
-    """Lista todos os relatórios existentes na planilha do Google Sheets.
-
-    Returns:
-        dict com a lista de abas/relatórios existentes.
-    """
-    try:
-        client = _get_sheets_client()
-        spreadsheet_id = os.getenv("GOOGLE_SHEETS_SPREADSHEET_ID")
-
-        if not spreadsheet_id:
-            return {"error": "GOOGLE_SHEETS_SPREADSHEET_ID não configurado no .env"}
-
-        spreadsheet = client.open_by_key(spreadsheet_id)
-        sheets = [ws.title for ws in spreadsheet.worksheets()]
-
-        return {
-            "total": len(sheets),
-            "reports": sheets,
-            "spreadsheet_url": f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}",
-        }
-    except Exception as e:
-        return {"error": f"Erro ao listar relatórios: {str(e)}"}
-```
-
-## 4.3 Criando o agente de relatório
+## 4.2 Criando o orquestrador
 
 ```bash
-mkdir -p agents/report_agent
-touch agents/report_agent/__init__.py
-touch agents/report_agent/agent.py
+mkdir -p agents/orchestrator
+touch agents/orchestrator/__init__.py
+touch agents/orchestrator/agent.py
 ```
 
 ```python
-# agents/report_agent/agent.py
+# agents/orchestrator/agent.py
 
 from google.adk.agents import Agent
-from tools.sheets_tool import export_report_to_sheets, list_reports
 
-report_agent = Agent(
-    name="report_agent",
+from agents.profile_agent.agent import profile_agent
+from agents.rag_agent.agent import rag_agent
+from agents.market_agent.agent import market_agent
+from agents.report_agent.agent import report_agent
+
+orchestrator = Agent(
+    name="orchestrator",
     model="gemini-2.0-flash",
-    description="Agente que gera relatórios consolidados de investimentos e exporta para Google Sheets.",
+    description="Orquestrador do sistema de análise de investimentos.",
     instruction="""
-    Você é um agente especializado em gerar relatórios de investimentos.
+    Você é o orquestrador de um sistema multi-agent de análise de investimentos.
 
-    Seu trabalho é:
-    1. Receber dados de análise (perfil do investidor, dados de mercado, recomendações)
-    2. Organizar as informações de forma clara e estruturada
-    3. Exportar o relatório para o Google Sheets usando a ferramenta export_report_to_sheets
-    4. Listar relatórios existentes quando solicitado usando list_reports
+    Você coordena os seguintes agentes especializados:
 
-    Ao gerar o relatório:
-    - Use um título descritivo
-    - Organize os dados de mercado de forma legível
-    - Escreva um resumo de análise claro e acionável
-    - Sempre inclua o disclaimer de que não é recomendação de investimento
+    1. **profile_agent**: Para avaliar o perfil de investidor do usuário (conservador, moderado, arrojado, agressivo). Use quando o usuário quer descobrir seu perfil ou quando precisa de uma recomendação personalizada.
 
-    Ao final, compartilhe o link da planilha com o usuário.
+    2. **rag_agent**: Para perguntas conceituais sobre investimentos (o que é renda fixa, como funciona tesouro direto, o que são ETFs, etc.). Use quando o usuário quer aprender ou entender conceitos.
+
+    3. **market_agent**: Para consultar dados de mercado em tempo real (cotações de ações, câmbio, Selic). Use quando o usuário quer saber preços, cotações ou dados atuais do mercado.
+
+    4. **report_agent**: Para gerar relatórios consolidados e exportar para Google Sheets. Use quando o usuário quer um relatório formal ou exportar dados.
+
+    REGRAS:
+    - Delegue cada tarefa para o agente mais adequado
+    - Para análises completas, use múltiplos agentes em sequência:
+      1. Primeiro descubra o perfil (profile_agent)
+      2. Busque dados de mercado relevantes (market_agent)
+      3. Consulte conceitos se necessário (rag_agent)
+      4. Gere o relatório final (report_agent)
+    - Seja claro sobre o que está fazendo em cada etapa
+    - Inclua o disclaimer de que as informações são educacionais
     """,
-    tools=[export_report_to_sheets, list_reports],
+    sub_agents=[profile_agent, rag_agent, market_agent, report_agent],
 )
 ```
 
 ```python
-# agents/report_agent/__init__.py
+# agents/orchestrator/__init__.py
 
-from .agent import report_agent
+from .agent import orchestrator
 
-root_agent = report_agent
+root_agent = orchestrator
 ```
 
-## 4.4 Testando o agente
+## 4.3 Atualizando o main.py
+
+```python
+# main.py
+
+import os
+import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai.types import Content, Part
+
+from agents.orchestrator import root_agent
+
+
+async def main():
+    session_service = InMemorySessionService()
+    runner = Runner(
+        agent=root_agent,
+        app_name="investment_advisor",
+        session_service=session_service,
+    )
+
+    session = await session_service.create_session(
+        app_name="investment_advisor",
+        user_id="user",
+    )
+
+    print("=" * 50)
+    print("  Sistema Multi-Agent de Investimentos")
+    print("  Powered by Google ADK + Gemini")
+    print("=" * 50)
+    print()
+    print("Agentes disponíveis:")
+    print("  - Perfil de Investidor")
+    print("  - RAG (Base de Conhecimento)")
+    print("  - Mercado (Cotações em tempo real)")
+    print("  - Relatório (Google Sheets)")
+    print()
+    print("Digite 'sair' para encerrar.")
+    print()
+
+    while True:
+        user_input = input("Você: ").strip()
+
+        if user_input.lower() in ("sair", "exit", "quit"):
+            print("Até logo!")
+            break
+
+        if not user_input:
+            continue
+
+        message = Content(
+            role="user",
+            parts=[Part(text=user_input)],
+        )
+
+        response = runner.run(
+            user_id="user",
+            session_id=session.id,
+            new_message=message,
+        )
+
+        print("\nAssistente: ", end="")
+        async for event in response:
+            if event.content and event.content.parts:
+                for part in event.content.parts:
+                    if part.text:
+                        print(part.text)
+        print()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+## 4.4 Testando o sistema completo
+
+### Via interface web (recomendado para debug)
 
 ```bash
 adk web agents/
 ```
 
-Teste com:
-- "Gere um relatório para um investidor moderado com PETR4 a R$38,50 e dólar a R$5,20"
-- "Liste os relatórios existentes"
+Selecione **orchestrator** e teste cada cenário:
 
-## 4.5 Conceitos-chave aprendidos
+### Teste 1 — Delegação para perfil
 
-| Conceito | Descrição |
-|----------|-----------|
-| Service Account | Credencial para acessar APIs Google programaticamente |
-| Google Sheets API | Permite ler/escrever planilhas via código |
-| Tools com side effects | Ferramentas que criam artefatos externos (planilha) |
-| Formatação | O agente decide como organizar os dados antes de exportar |
+```
+Você: Quero descobrir meu perfil de investidor
+→ Orquestrador delega para profile_agent
+→ profile_agent faz perguntas e classifica
+```
 
-No próximo bloco vamos juntar tudo com o orquestrador. Vamos para o [Bloco 5](BLOCO-5.md).
+### Teste 2 — Delegação para RAG
+
+```
+Você: O que é tesouro direto?
+→ Orquestrador delega para rag_agent
+→ rag_agent busca na base e explica
+```
+
+### Teste 3 — Delegação para mercado
+
+```
+Você: Qual o preço da PETR4 e do dólar hoje?
+→ Orquestrador delega para market_agent
+→ market_agent chama get_stock_quote e get_currency_rate
+```
+
+### Teste 4 — Fluxo completo (múltiplos agentes)
+
+```
+Você: Quero uma análise completa dos meus investimentos.
+      Sou conservador, invisto a longo prazo, tenho pouca experiência
+      e meu objetivo é crescimento.
+
+→ Orquestrador:
+  1. Delega para profile_agent → classifica perfil
+  2. Delega para market_agent → busca cotações relevantes
+  3. Delega para rag_agent → busca conceitos sobre o perfil
+  4. Delega para report_agent → gera relatório no Google Sheets
+  5. Retorna resposta consolidada com link da planilha
+```
+
+### Via terminal
+
+```bash
+python main.py
+```
+
+## 4.5 Arquitetura final do projeto
+
+```
+gdg-workshop-build-ai-multiagents/
+├── agents/
+│   ├── __init__.py
+│   ├── orchestrator/          # Bloco 4
+│   │   ├── __init__.py
+│   │   └── agent.py
+│   ├── profile_agent/         # Bloco 1
+│   │   ├── __init__.py
+│   │   └── agent.py
+│   ├── rag_agent/             # Bloco 2
+│   │   ├── __init__.py
+│   │   └── agent.py
+│   ├── market_agent/          # Bloco 3
+│   │   ├── __init__.py
+│   │   └── agent.py
+│   └── report_agent/          # Bloco 3
+│       ├── __init__.py
+│       └── agent.py
+├── tools/
+│   ├── __init__.py
+│   ├── rag_tool.py            # Busca na base de conhecimento
+│   ├── market_tools.py        # yfinance, câmbio, Selic
+│   └── sheets_tool.py         # Exportação Google Sheets
+├── data/
+│   ├── __init__.py
+│   └── knowledge_base.py      # Base sobre investimentos
+├── docs/
+│   ├── BLOCO-1.md             # Google ADK + Agente de Perfil
+│   ├── BLOCO-2.md             # Agente RAG
+│   ├── BLOCO-3.md             # Agente Mercado + Relatório
+│   └── BLOCO-4.md             # Sistema Multi-Agent
+├── main.py
+├── requirements.txt
+├── .env.example
+├── .env
+├── credentials.json           # NÃO commitar!
+├── .gitignore
+├── CLAUDE.md
+└── README.md
+```
+
+## 4.6 Recapitulação do Workshop
+
+| Bloco | O que construímos |
+|-------|-------------------|
+| 1 | Setup + Google ADK + Agente de Perfil de Investidor (com tool de classificação) |
+| 2 | Agente RAG com base de conhecimento sobre investimentos |
+| 3 | Agente de Mercado (yfinance, câmbio, Selic) + Agente de Relatório (Google Sheets) |
+| 4 | Orquestrador multi-agent que coordena todos os agentes |
+
+## 4.7 O que aprendemos
+
+- **Google ADK** como framework para agentes de IA
+- **Function Calling** — o modelo decide quando e como usar ferramentas
+- **RAG** — fundamentar respostas em dados reais
+- **APIs públicas** — integrar dados de mercado em tempo real
+- **Google Sheets API** — gerar artefatos externos
+- **Multi-agent** — orquestração onde o todo é maior que a soma das partes
+
+## 4.8 Próximos passos
+
+- Melhorar o RAG com embeddings e busca vetorial (Vertex AI, ChromaDB)
+- Adicionar mais fontes de dados (fundos, FIIs, criptomoedas)
+- Implementar memória persistente entre sessões
+- Deploy em Cloud Run ou Cloud Functions
+- Adicionar autenticação de usuários
+- Usar Gemini 2.5 com thinking para análises mais complexas
+
+Parabéns! Você construiu um sistema multi-agent do zero usando Google ADK.

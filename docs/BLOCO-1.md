@@ -1,145 +1,54 @@
-# Bloco 1 — Google AI Studio: Conceitos e Playground
+# Bloco 1 — Google ADK + Primeiro Agente
 
-Neste bloco vamos explorar o [Google AI Studio](https://aistudio.google.com/) e entender cada conceito disponível no playground antes de escrever código.
+Neste bloco vamos configurar o ambiente, entender o Google ADK e construir nosso primeiro agente — um avaliador de perfil de investidor.
 
-## 1.1 Acessando o Google AI Studio
+## 1.1 O que é o Google ADK?
 
-1. Acesse [aistudio.google.com](https://aistudio.google.com/)
-2. Faça login com sua conta Google
-3. Clique em **"Create new prompt"** para abrir o playground
+O **Agent Development Kit (ADK)** é o framework do Google para construir agentes de IA. Ele oferece:
 
-## 1.2 Conceitos do Playground
+- Criação declarativa de agentes com instruções e tools
+- Orquestração multi-agent nativa
+- Integração direta com modelos Gemini
+- Interface web para debug (`adk web`)
 
-### Temperatura (`temperature`)
+## 1.2 Setup do projeto
 
-Controla a aleatoriedade das respostas do modelo.
+### Pré-requisitos
 
-- **0.0** — respostas determinísticas e focadas (ideal para tarefas objetivas)
-- **1.0** — respostas mais criativas e variadas
-- **2.0** — máxima aleatoriedade
+- Python 3.12+
+- Conta Google
 
-> **Teste**: envie a mesma pergunta com temperatura 0 e depois com temperatura 1.5. Compare as respostas.
-
-### Thinking Level
-
-Controla o nível de "raciocínio" do modelo antes de responder.
-
-- Modelos com thinking (como Gemini 2.5) podem "pensar" antes de responder
-- Níveis mais altos = raciocínio mais profundo, mas mais lento e caro
-
-> **Teste**: peça ao modelo para resolver um problema de lógica com e sem thinking ativado.
-
-### Structured Outputs
-
-Força o modelo a responder em um formato estruturado (JSON Schema).
-
-- Útil para integrar a saída do modelo em sistemas programáticos
-- Você define o schema e o modelo garante conformidade
-
-> **Teste**: peça ao modelo para retornar informações de uma empresa no formato JSON com campos `nome`, `setor`, `ticker`.
-
-### Code Execution
-
-Permite ao modelo escrever e executar código Python em sandbox.
-
-- O modelo pode fazer cálculos, gerar gráficos e processar dados
-- A execução acontece em ambiente seguro do Google
-
-> **Teste**: peça ao modelo para calcular o retorno composto de um investimento de R$10.000 a 12% a.a. por 5 anos.
-
-### Function Calling
-
-Permite ao modelo chamar funções que você define — é a base das **tools** no ADK.
-
-- Você declara funções com nome, descrição e parâmetros
-- O modelo decide quando chamar e com quais argumentos
-- Você executa a função e retorna o resultado ao modelo
-
-> **Teste**: declare uma função `get_stock_price(ticker: str)` e veja o modelo chamá-la.
-
-### Grounding with Google Search
-
-Permite ao modelo buscar informações atualizadas no Google Search.
-
-- Reduz alucinações com dados em tempo real
-- O modelo cita as fontes utilizadas
-
-> **Teste**: pergunte "Qual a cotação atual do dólar?" com e sem grounding.
-
-### Grounding with Google Maps
-
-Permite ao modelo buscar informações geográficas e de localização.
-
-- Dados de endereços, rotas, pontos de interesse
-- Útil para agentes que lidam com localização
-
-> **Teste**: pergunte "Onde fica a sede do Google no Brasil?" com grounding de Maps.
-
-### URL Context
-
-Permite ao modelo ler e analisar o conteúdo de URLs fornecidas.
-
-- O modelo acessa a página e usa como contexto
-- Útil para análise de artigos, documentações, relatórios
-
-> **Teste**: passe a URL de uma notícia financeira e peça um resumo.
-
-### Media Resolution
-
-Controla a resolução de mídia (imagens, vídeos) processada pelo modelo.
-
-- Resoluções mais altas = mais detalhes, mas mais tokens consumidos
-- Escolha baseado na necessidade de detalhe vs. custo
-
-### Safety Settings
-
-Configura os filtros de segurança do modelo.
-
-- Categorias: assédio, discurso de ódio, conteúdo sexual, conteúdo perigoso
-- Níveis: bloquear nenhum, poucos, alguns, maioria
-
-> **Atenção**: para workshop educacional, mantenha as configurações padrão.
-
-### Add Stop Sequence
-
-Define sequências de texto que fazem o modelo parar de gerar.
-
-- Útil para controlar o formato de saída
-- Exemplo: `\n\n` para parar após dois parágrafos
-
-### Output Length (Max Tokens)
-
-Limita o número máximo de tokens na resposta.
-
-- Controla custo e tamanho da resposta
-- Não significa que o modelo vai usar todos os tokens — é um limite
-
-### Top-P (Nucleus Sampling)
-
-Controla a diversidade da saída por amostragem de núcleo.
-
-- **0.1** — considera apenas os tokens mais prováveis (mais focado)
-- **1.0** — considera todos os tokens (mais diverso)
-- Funciona em conjunto com a temperatura
-
-> **Dica**: na maioria dos casos, ajuste apenas a temperatura e deixe top-p em 0.95.
-
-## 1.3 Criando sua API Key
-
-1. No Google AI Studio, clique em **"Get API Key"** no menu lateral
-2. Clique em **"Create API Key"**
-3. Selecione ou crie um projeto no Google Cloud
-4. Copie a key gerada
-5. **Nunca** commite a key no repositório — use `.env`
+### Criando o ambiente
 
 ```bash
-# No terminal
-echo "GOOGLE_API_KEY=sua-key-aqui" > .env
+git clone <url-do-repositorio>
+cd gdg-workshop-build-ai-multiagents
+
+python -m venv .venv
+source .venv/bin/activate  # Linux/Mac
+# .venv\Scripts\activate   # Windows
+
+pip install -r requirements.txt
 ```
 
-## 1.4 Testando a API Key
+### Criando sua API Key
+
+1. Acesse [aistudio.google.com](https://aistudio.google.com/)
+2. No menu lateral, clique em **"Get API Key"**
+3. Clique em **"Create API Key"**
+4. Selecione ou crie um projeto no Google Cloud
+5. Copie a key gerada
+
+```bash
+cp .env.example .env
+# Edite o .env e cole sua GOOGLE_API_KEY
+```
+
+### Testando a API Key
 
 ```python
+# test_api.py
+
 import os
 from dotenv import load_dotenv
 from google import genai
@@ -160,4 +69,227 @@ print(response.text)
 python test_api.py
 ```
 
-Se obteve uma resposta, sua API Key está funcionando. Vamos para o [Bloco 2](BLOCO-2.md).
+Se obteve uma resposta, estamos prontos.
+
+## 1.3 Estrutura de um agente no ADK
+
+No ADK, cada agente é um **módulo Python** dentro de uma pasta com um `__init__.py` que exporta `root_agent`.
+
+```
+agents/
+└── meu_agente/
+    ├── __init__.py    # Exporta root_agent
+    └── agent.py       # Define o agente
+```
+
+Conceitos fundamentais:
+
+| Conceito | Descrição |
+|----------|-----------|
+| `Agent` | Unidade básica — tem nome, modelo, instruções e tools |
+| `instruction` | System prompt — define personalidade e comportamento |
+| `tools` | Funções Python que o agente pode chamar |
+| `Runner` | Executa o agente e gerencia a conversação |
+| `Session` | Mantém o histórico de uma conversa |
+| `adk web` | Interface web para testar agentes visualmente |
+
+## 1.4 Criando o primeiro agente: Perfil de Investidor
+
+Nosso primeiro agente vai avaliar o perfil de risco do usuário (conservador, moderado, arrojado, agressivo) através de uma conversa e uma tool de classificação.
+
+### Passo 1 — Criar a estrutura de pastas
+
+```bash
+mkdir -p agents/profile_agent
+touch agents/__init__.py
+touch agents/profile_agent/__init__.py
+touch agents/profile_agent/agent.py
+```
+
+### Passo 2 — Definir a tool de classificação
+
+A tool é uma função Python comum. O ADK usa o docstring e as type hints para gerar o schema que o modelo Gemini vai usar para chamar a função.
+
+```python
+# agents/profile_agent/agent.py
+
+from google.adk.agents import Agent
+
+
+def classify_profile(
+    risk_tolerance: str,
+    investment_horizon: str,
+    experience: str,
+    objective: str,
+) -> dict:
+    """Classifica o perfil do investidor com base nas respostas do usuário.
+
+    Args:
+        risk_tolerance: Tolerância a risco (baixa, media, alta).
+        investment_horizon: Horizonte de investimento (curto, medio, longo).
+        experience: Experiência com investimentos (nenhuma, pouca, moderada, muita).
+        objective: Objetivo principal (preservar_capital, renda, crescimento, especulacao).
+
+    Returns:
+        dict com o perfil classificado e recomendações de alocação.
+    """
+    score = 0
+
+    risk_scores = {"baixa": 1, "media": 2, "alta": 3}
+    horizon_scores = {"curto": 1, "medio": 2, "longo": 3}
+    experience_scores = {"nenhuma": 1, "pouca": 1, "moderada": 2, "muita": 3}
+    objective_scores = {
+        "preservar_capital": 1,
+        "renda": 2,
+        "crescimento": 3,
+        "especulacao": 4,
+    }
+
+    score += risk_scores.get(risk_tolerance, 2)
+    score += horizon_scores.get(investment_horizon, 2)
+    score += experience_scores.get(experience, 1)
+    score += objective_scores.get(objective, 2)
+
+    if score <= 5:
+        profile = "Conservador"
+        allocation = "80% Renda Fixa, 15% Fundos Multimercado, 5% Renda Variável"
+    elif score <= 8:
+        profile = "Moderado"
+        allocation = "50% Renda Fixa, 25% Fundos Multimercado, 25% Renda Variável"
+    elif score <= 11:
+        profile = "Arrojado"
+        allocation = "25% Renda Fixa, 25% Fundos Multimercado, 50% Renda Variável"
+    else:
+        profile = "Agressivo"
+        allocation = "10% Renda Fixa, 20% Fundos Multimercado, 70% Renda Variável"
+
+    return {
+        "perfil": profile,
+        "score": score,
+        "alocacao_recomendada": allocation,
+        "tolerancia_risco": risk_tolerance,
+        "horizonte": investment_horizon,
+    }
+```
+
+### Passo 3 — Definir o agente
+
+Adicione o agente no mesmo arquivo, logo após a tool:
+
+```python
+# agents/profile_agent/agent.py (continuação)
+
+profile_agent = Agent(
+    name="profile_agent",
+    model="gemini-2.0-flash",
+    description="Agente que avalia o perfil de investidor do usuário através de perguntas.",
+    instruction="""
+    Você é um agente especializado em avaliação de perfil de investidor.
+
+    Seu trabalho é fazer perguntas ao usuário para entender:
+    1. Tolerância a risco (baixa, media, alta)
+    2. Horizonte de investimento (curto: até 1 ano, medio: 1-5 anos, longo: 5+ anos)
+    3. Experiência com investimentos (nenhuma, pouca, moderada, muita)
+    4. Objetivo principal (preservar_capital, renda, crescimento, especulacao)
+
+    Faça as perguntas de forma conversacional e amigável, uma de cada vez.
+    Quando tiver todas as respostas, use a ferramenta classify_profile para classificar.
+    Apresente o resultado de forma clara e explique o que cada perfil significa.
+    Sempre mencione que a análise é educacional e não constitui recomendação de investimento.
+    """,
+    tools=[classify_profile],
+)
+```
+
+### Passo 4 — Exportar como root_agent
+
+```python
+# agents/profile_agent/__init__.py
+
+from .agent import profile_agent
+
+root_agent = profile_agent
+```
+
+### Passo 5 — Testar com `adk web`
+
+O ADK vem com uma interface web para testar agentes:
+
+```bash
+adk web agents/
+```
+
+Acesse `http://localhost:8000` no navegador, selecione **profile_agent** e converse:
+
+```
+Você: Quero descobrir meu perfil de investidor
+Agente: Ótimo! Vou te fazer algumas perguntas...
+```
+
+O agente deve fazer as perguntas, chamar a tool `classify_profile` automaticamente e apresentar o resultado.
+
+### Passo 6 — Testar via código
+
+```python
+# test_agent.py
+
+import os
+import asyncio
+from dotenv import load_dotenv
+
+load_dotenv()
+
+from google.adk.runners import Runner
+from google.adk.sessions import InMemorySessionService
+from google.genai.types import Content, Part
+
+from agents.profile_agent import root_agent
+
+
+async def main():
+    session_service = InMemorySessionService()
+    runner = Runner(
+        agent=root_agent,
+        app_name="workshop",
+        session_service=session_service,
+    )
+
+    session = await session_service.create_session(
+        app_name="workshop",
+        user_id="user",
+    )
+
+    message = Content(
+        role="user",
+        parts=[Part(text="Quero descobrir meu perfil de investidor")],
+    )
+
+    response = runner.run(
+        user_id="user",
+        session_id=session.id,
+        new_message=message,
+    )
+
+    async for event in response:
+        if event.content and event.content.parts:
+            for part in event.content.parts:
+                if part.text:
+                    print(part.text)
+
+
+asyncio.run(main())
+```
+
+```bash
+python test_agent.py
+```
+
+## 1.5 Conceitos-chave aprendidos
+
+- **Google ADK**: framework para criar agentes com Gemini
+- **Agent**: unidade básica com instrução + tools
+- **Tools**: funções Python que o modelo decide quando chamar (function calling)
+- **`adk web`**: interface para testar agentes visualmente
+- **Perfil de investidor**: nosso primeiro agente funcional
+
+Pronto para construir o agente de RAG? Vamos para o [Bloco 2](BLOCO-2.md).

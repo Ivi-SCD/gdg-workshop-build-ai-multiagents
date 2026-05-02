@@ -1,206 +1,262 @@
-# Bloco 2 — Primeiro Agente com Google ADK
+# Bloco 2 — Agente RAG (Retrieval-Augmented Generation)
 
-Neste bloco vamos criar nosso primeiro agente usando o **Google Agent Development Kit (ADK)**.
+Neste bloco vamos construir um agente que busca informações em uma base de conhecimento local sobre investimentos antes de responder.
 
-## 2.1 O que é o Google ADK?
+## 2.1 O que é RAG?
 
-O ADK é o framework do Google para construir agentes de IA. Ele oferece:
+**RAG (Retrieval-Augmented Generation)** é uma técnica que combina:
 
-- Criação declarativa de agentes com instruções e tools
-- Orquestração multi-agent nativa
-- Integração direta com modelos Gemini
-- Ferramentas prontas (Google Search, Code Execution, etc.)
-- Interface web para debug (`adk web`)
+1. **Retrieval**: buscar informações relevantes em uma base de dados
+2. **Augmented**: usar essas informações como contexto
+3. **Generation**: gerar uma resposta baseada no contexto encontrado
 
-## 2.2 Instalação
+Isso reduz alucinações e permite que o modelo responda com dados específicos do seu domínio.
+
+```
+Pergunta do usuário
+        │
+        ▼
+┌──────────────┐     ┌──────────────────┐
+│   Retrieval  │────▶│ Base de           │
+│   (busca)    │◀────│ Conhecimento      │
+└──────┬───────┘     └──────────────────┘
+       │
+       ▼
+┌──────────────┐
+│  Generation  │ ← contexto encontrado + pergunta
+│  (Gemini)    │
+└──────┬───────┘
+       │
+       ▼
+   Resposta
+```
+
+## 2.2 Criando a base de conhecimento
 
 ```bash
-# Ative seu venv
-source .venv/bin/activate
-
-# Instale as dependências
-pip install -r requirements.txt
+mkdir -p data
+touch data/__init__.py
 ```
 
-## 2.3 Estrutura de um agente no ADK
+```python
+# data/knowledge_base.py
 
-No ADK, cada agente é um **módulo Python** dentro de uma pasta com um `__init__.py` que exporta o agente como `root_agent`.
-
+KNOWLEDGE_BASE = [
+    {
+        "topic": "Renda Fixa",
+        "content": """
+        Renda fixa são investimentos onde as regras de remuneração são definidas no momento da aplicação.
+        Tipos principais: Tesouro Direto (Selic, IPCA+, Prefixado), CDB, LCI, LCA, Debêntures.
+        Risco: geralmente baixo, protegido pelo FGC até R$250 mil por CPF por instituição.
+        Indicado para: perfil conservador, reserva de emergência, objetivos de curto prazo.
+        """,
+    },
+    {
+        "topic": "Renda Variável",
+        "content": """
+        Renda variável são investimentos onde o retorno não é previsível no momento da aplicação.
+        Tipos principais: Ações, FIIs (Fundos Imobiliários), ETFs, BDRs, Criptomoedas.
+        Risco: alto, sem garantia do FGC. Preço varia conforme mercado.
+        Indicado para: perfil moderado a arrojado, objetivos de longo prazo.
+        """,
+    },
+    {
+        "topic": "Fundos de Investimento",
+        "content": """
+        Fundos são veículos coletivos geridos por um gestor profissional.
+        Tipos: Renda Fixa, Multimercado, Ações, Cambial, Imobiliário (FIIs).
+        Custos: taxa de administração, taxa de performance, come-cotas.
+        Vantagem: diversificação e gestão profissional. Desvantagem: taxas e menos controle.
+        """,
+    },
+    {
+        "topic": "Tesouro Direto",
+        "content": """
+        Programa do governo federal para venda de títulos públicos a pessoas físicas.
+        Tesouro Selic: pós-fixado, acompanha a taxa Selic. Ideal para reserva de emergência.
+        Tesouro IPCA+: híbrido, paga IPCA + taxa fixa. Protege contra inflação.
+        Tesouro Prefixado: taxa definida na compra. Bom quando se espera queda de juros.
+        Investimento mínimo: ~R$30. Liquidez: D+1 (Selic) ou mercado secundário.
+        """,
+    },
+    {
+        "topic": "Diversificação",
+        "content": """
+        Estratégia de distribuir investimentos entre diferentes classes de ativos.
+        Objetivo: reduzir risco sem necessariamente sacrificar retorno.
+        Regra geral: não colocar todos os ovos na mesma cesta.
+        Exemplos de alocação: conservador (80% RF, 20% RV), moderado (60/40), arrojado (30/70).
+        Rebalanceamento periódico é importante para manter a alocação alvo.
+        """,
+    },
+    {
+        "topic": "FIIs - Fundos Imobiliários",
+        "content": """
+        FIIs são fundos que investem em imóveis ou títulos imobiliários, negociados em bolsa.
+        Tipos: tijolo (imóveis físicos), papel (CRIs/CRAs), híbridos, fundos de fundos.
+        Vantagem: rendimentos mensais isentos de IR para pessoa física (com condições).
+        Risco: vacância, inadimplência, variação de cotas, risco de mercado.
+        Indicado para: quem busca renda passiva com exposição ao setor imobiliário.
+        """,
+    },
+    {
+        "topic": "Análise Fundamentalista",
+        "content": """
+        Método de avaliação que analisa os fundamentos econômicos de uma empresa.
+        Indicadores principais: P/L (Preço/Lucro), P/VP (Preço/Valor Patrimonial),
+        ROE (Retorno sobre Patrimônio), Dividend Yield, Margem Líquida.
+        Objetivo: determinar se uma ação está cara ou barata em relação ao seu valor intrínseco.
+        Usado por investidores de longo prazo (buy and hold, value investing).
+        """,
+    },
+    {
+        "topic": "ETFs",
+        "content": """
+        ETFs (Exchange Traded Funds) são fundos de índice negociados em bolsa.
+        Replicam índices como Ibovespa (BOVA11), S&P 500 (IVVB11), Small Caps (SMAL11).
+        Vantagem: diversificação instantânea, baixas taxas de administração, liquidez.
+        Desvantagem: não há isenção de IR para vendas até R$20 mil/mês (como ações).
+        Ideal para: investidores que querem diversificação com simplicidade.
+        """,
+    },
+]
 ```
-agents/
-└── meu_agente/
-    ├── __init__.py    # Exporta root_agent
-    └── agent.py       # Define o agente
-```
 
-## 2.4 Criando o primeiro agente
-
-Vamos criar um agente simples que responde perguntas sobre investimentos.
-
-### Passo 1 — Criar a estrutura
+## 2.3 Criando a tool de busca
 
 ```bash
-mkdir -p agents/primeiro_agente
-touch agents/__init__.py
-touch agents/primeiro_agente/__init__.py
-touch agents/primeiro_agente/agent.py
+mkdir -p tools
+touch tools/__init__.py
 ```
-
-### Passo 2 — Definir o agente
 
 ```python
-# agents/primeiro_agente/agent.py
+# tools/rag_tool.py
 
-from google.adk.agents import Agent
+from data.knowledge_base import KNOWLEDGE_BASE
 
-primeiro_agente = Agent(
-    name="primeiro_agente",
-    model="gemini-2.0-flash",
-    description="Agente que responde perguntas básicas sobre investimentos.",
-    instruction="""
-    Você é um assistente especializado em investimentos.
-    Responda de forma clara e didática.
-    Sempre mencione que suas respostas são educacionais e não constituem recomendação de investimento.
-    """,
-)
-```
 
-### Passo 3 — Exportar como root_agent
-
-```python
-# agents/primeiro_agente/__init__.py
-
-from .agent import primeiro_agente
-
-root_agent = primeiro_agente
-```
-
-### Passo 4 — Testar com `adk web`
-
-O ADK vem com uma interface web para testar agentes:
-
-```bash
-adk web agents/
-```
-
-Acesse `http://localhost:8000` no navegador, selecione `primeiro_agente` e converse com ele.
-
-### Passo 5 — Testar via código
-
-```python
-# test_agent.py
-
-import os
-import asyncio
-from dotenv import load_dotenv
-
-load_dotenv()
-
-from google.adk.runners import Runner
-from google.adk.sessions import InMemorySessionService
-from google.genai.types import Content, Part
-
-from agents.primeiro_agente import root_agent
-
-async def main():
-    session_service = InMemorySessionService()
-    runner = Runner(
-        agent=root_agent,
-        app_name="workshop",
-        session_service=session_service,
-    )
-
-    session = await session_service.create_session(
-        app_name="workshop",
-        user_id="user",
-    )
-
-    message = Content(
-        role="user",
-        parts=[Part(text="O que é renda fixa?")],
-    )
-
-    response = runner.run(
-        user_id="user",
-        session_id=session.id,
-        new_message=message,
-    )
-
-    async for event in response:
-        if event.content and event.content.parts:
-            for part in event.content.parts:
-                if part.text:
-                    print(part.text)
-
-asyncio.run(main())
-```
-
-```bash
-python test_agent.py
-```
-
-## 2.5 Adicionando uma Tool ao agente
-
-Tools são funções Python que o agente pode chamar. Vamos criar uma tool simples:
-
-```python
-# agents/primeiro_agente/agent.py
-
-from google.adk.agents import Agent
-
-def calcular_rendimento(valor_inicial: float, taxa_anual: float, anos: int) -> dict:
-    """Calcula o rendimento de um investimento com juros compostos.
+def search_knowledge_base(query: str) -> dict:
+    """Busca informações na base de conhecimento sobre investimentos.
 
     Args:
-        valor_inicial: Valor investido inicialmente em reais.
-        taxa_anual: Taxa de juros anual (ex: 0.12 para 12%).
-        anos: Número de anos do investimento.
+        query: Termo ou pergunta para buscar na base de conhecimento.
 
     Returns:
-        dict com valor_final e rendimento_total.
+        dict com os resultados encontrados na base.
     """
-    valor_final = valor_inicial * (1 + taxa_anual) ** anos
-    return {
-        "valor_inicial": f"R$ {valor_inicial:,.2f}",
-        "valor_final": f"R$ {valor_final:,.2f}",
-        "rendimento_total": f"R$ {valor_final - valor_inicial:,.2f}",
-        "anos": anos,
-        "taxa_anual": f"{taxa_anual * 100:.1f}%",
-    }
+    query_lower = query.lower()
+    results = []
 
-primeiro_agente = Agent(
-    name="primeiro_agente",
+    for item in KNOWLEDGE_BASE:
+        topic_match = query_lower in item["topic"].lower()
+        content_match = any(
+            word in item["content"].lower()
+            for word in query_lower.split()
+            if len(word) > 3
+        )
+
+        if topic_match or content_match:
+            results.append({
+                "topic": item["topic"],
+                "content": item["content"].strip(),
+            })
+
+    if not results:
+        return {
+            "message": "Nenhum resultado encontrado na base de conhecimento.",
+            "results": [],
+        }
+
+    return {
+        "message": f"{len(results)} resultado(s) encontrado(s).",
+        "results": results,
+    }
+```
+
+> **Nota**: essa busca é por keywords. Em produção, usaríamos embeddings + busca vetorial para resultados mais relevantes. Para o workshop, keyword search é suficiente e didático.
+
+## 2.4 Criando o agente de RAG
+
+```bash
+mkdir -p agents/rag_agent
+touch agents/rag_agent/__init__.py
+touch agents/rag_agent/agent.py
+```
+
+```python
+# agents/rag_agent/agent.py
+
+from google.adk.agents import Agent
+from tools.rag_tool import search_knowledge_base
+
+rag_agent = Agent(
+    name="rag_agent",
     model="gemini-2.0-flash",
-    description="Agente que responde perguntas básicas sobre investimentos.",
+    description="Agente especializado em buscar e explicar informações sobre investimentos usando a base de conhecimento.",
     instruction="""
-    Você é um assistente especializado em investimentos.
-    Responda de forma clara e didática.
-    Sempre mencione que suas respostas são educacionais e não constituem recomendação de investimento.
-    Use a ferramenta calcular_rendimento quando o usuário quiser simular investimentos.
+    Você é um agente de RAG especializado em investimentos.
+
+    REGRAS:
+    1. SEMPRE use a ferramenta search_knowledge_base antes de responder qualquer pergunta
+    2. Baseie suas respostas nos dados retornados pela busca
+    3. Se não encontrar informações na base, diga claramente que não tem essa informação disponível
+    4. Responda de forma educacional, clara e didática
+    5. Pode complementar com explicações, mas o núcleo da resposta deve vir da base
+    6. Sempre mencione que suas respostas são educacionais e não constituem recomendação de investimento
+
+    Você é o especialista em conhecimento teórico sobre investimentos do nosso sistema.
     """,
-    tools=[calcular_rendimento],
+    tools=[search_knowledge_base],
 )
 ```
 
-Teste novamente:
+```python
+# agents/rag_agent/__init__.py
+
+from .agent import rag_agent
+
+root_agent = rag_agent
+```
+
+## 2.5 Testando o agente
 
 ```bash
 adk web agents/
 ```
 
-Pergunte: "Quanto rende R$10.000 a 13% ao ano por 3 anos?"
+Selecione **rag_agent** e teste:
 
-O agente deve chamar a tool automaticamente e usar o resultado na resposta.
+| Pergunta | Esperado |
+|----------|----------|
+| "O que é tesouro direto?" | Busca na base e explica os tipos de título |
+| "Me explica sobre FIIs" | Busca fundos imobiliários e detalha |
+| "O que são ETFs?" | Retorna informações sobre ETFs |
+| "Como funciona a diversificação?" | Explica a estratégia e exemplos de alocação |
+| "O que é bitcoin?" | Deve dizer que não encontrou na base |
 
-## 2.6 Conceitos-chave aprendidos
+## 2.6 Como o RAG funciona por baixo
+
+Quando você pergunta "O que é tesouro direto?":
+
+```
+1. Agente recebe a pergunta
+2. Gemini decide chamar search_knowledge_base(query="tesouro direto")
+3. Tool busca na KNOWLEDGE_BASE por matches
+4. Retorna: {topic: "Tesouro Direto", content: "Programa do governo..."}
+5. Gemini usa esse contexto para gerar a resposta final
+6. Usuário recebe uma resposta fundamentada nos dados da base
+```
+
+O model **decide sozinho** quando e como chamar a tool — isso é **function calling** em ação.
+
+## 2.7 Conceitos-chave aprendidos
 
 | Conceito | Descrição |
 |----------|-----------|
-| `Agent` | Unidade básica do ADK — tem nome, modelo, instruções e tools |
-| `instruction` | System prompt do agente — define personalidade e comportamento |
-| `tools` | Funções Python que o agente pode chamar quando necessário |
-| `Runner` | Executa o agente e gerencia a conversação |
-| `Session` | Mantém o histórico de uma conversa |
-| `adk web` | Interface web para testar agentes visualmente |
+| RAG | Busca + contexto + geração — reduz alucinações |
+| Knowledge Base | Base de dados com informações do domínio |
+| Keyword Search | Busca simples por palavras-chave (produção usa embeddings) |
+| Function Calling | O modelo decide quando chamar a tool |
+| Grounding | Fundamentar respostas em dados reais |
 
-Pronto para construir agentes especializados? Vamos para o [Bloco 3](BLOCO-3.md).
+No próximo bloco vamos construir os agentes de mercado e relatório. Vamos para o [Bloco 3](BLOCO-3.md).
