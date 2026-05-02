@@ -1,4 +1,4 @@
-# Do 0 ao Multi-Agent com Google ADK
+# GDG Recife - Do 0 ao Multi-Agent com Google ADK
 
 Workshop prático onde você vai sair do zero até construir um sistema multi-agent completo para análise de investimentos usando o **Google Agent Development Kit (ADK)**.
 
@@ -6,8 +6,8 @@ Workshop prático onde você vai sair do zero até construir um sistema multi-ag
 
 | Nome | Contato |
 |------|---------|
-| **Ivisson Alves** | <!-- adicionar links --> |
-| **Giulia Buonafina** | <!-- adicionar links --> |
+| **Ivisson Alves** | [Linkedin](https://www.linkedin.com/in/ivi-aiengineer/) & [Instagram](https://www.instagram.com/ivii.ai)
+| **Giulia Buonafina** | [Linkedin](https://www.linkedin.com/in/giulia-buonafina-019574260/) & [Instagram](https://www.instagram.com/data.giu/)
 
 ## O que vamos construir?
 
@@ -22,8 +22,10 @@ Um sistema multi-agent de análise de investimentos composto por:
 ## Pré-requisitos
 
 - Python 3.12+
-- Conta Google (para Google AI Studio e API Key)
-- Git
+- Conta Google
+- Conta Google Cloud (GCP para Google AI Studio e API Key)
+- Git & Github
+- Sua IDE Favorita (VS Code, VIM, Bloco de Notas, feel free)
 
 ## Setup rápido
 
@@ -45,17 +47,16 @@ cp .env.example .env
 
 | Bloco | Tema | Doc |
 |-------|------|-----|
-| 1 | Google ADK + Primeiro Agente (Perfil de Investidor) | [BLOCO-1](docs/BLOCO-1.md) |
-| 2 | Agente RAG (Base de Conhecimento) | [BLOCO-2](docs/BLOCO-2.md) |
-| 3 | Agente de Mercado + Agente de Relatório | [BLOCO-3](docs/BLOCO-3.md) |
-| 4 | Orquestrador e Sistema Multi-Agent Completo | [BLOCO-4](docs/BLOCO-4.md) |
+| 1 | Google AI Studio — Conceitos e Playground, Google ADK + Primeiro Agente | [BLOCO-1](docs/BLOCO-1.md) |
+| 2 | Agente RAG | [BLOCO-2](docs/BLOCO-2.md) |
+| 3 | Agente Mercado + Agente Relatório | [BLOCO-3](docs/BLOCO-3.md) |
+| 4 | Multi-Agents | [BLOCO-4](docs/BLOCO-4.md) |
 
 ## Estrutura do projeto
 
 ```
 ├── agents/            # Código dos agentes
 ├── tools/             # Ferramentas (tools) dos agentes
-├── data/              # Dados para RAG
 ├── docs/              # Guias passo a passo (BLOCO-*.md)
 ├── main.py            # Entrypoint do sistema multi-agent
 ├── requirements.txt   # Dependências
