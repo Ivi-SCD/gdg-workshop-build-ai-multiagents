@@ -30,7 +30,7 @@ Um sistema multi-agent de análise de investimentos composto por:
 ## Setup rápido
 
 ```bash
-git clone https://github.com/seu-usuario/gdg-workshop-build-ai-multiagents.git
+git clone https://github.com/Ivi-SCD/gdg-workshop-build-ai-multiagents.git
 cd gdg-workshop-build-ai-multiagents
 
 python -m venv .venv
@@ -45,12 +45,12 @@ cp .env.example .env
 
 ## Roteiro do Workshop
 
-| Bloco | Tema | Doc |
-|-------|------|-----|
-| 1 | Google AI Studio — Conceitos e Playground, Google ADK + Primeiro Agente | [BLOCO-1](docs/BLOCO-1.md) |
-| 2 | Agente RAG | [BLOCO-2](docs/BLOCO-2.md) |
-| 3 | Agente Mercado + Agente Relatório | [BLOCO-3](docs/BLOCO-3.md) |
-| 4 | Multi-Agents | [BLOCO-4](docs/BLOCO-4.md) |
+| Bloco | Tema | Doc | Tempo
+|-------|------|-----|-----
+| 1 | Google AI Studio — Conceitos e Playground, Google ADK + Primeiro Agente | [BLOCO-1](docs/BLOCO-1.md) | 30min
+| 2 | Agente RAG | [BLOCO-2](docs/BLOCO-2.md) | 30min
+| 3 | Agente Mercado + Agente Relatório | [BLOCO-3](docs/BLOCO-3.md) | 30min
+| 4 | Multi-Agents | [BLOCO-4](docs/BLOCO-4.md) | 30min
 
 ## Estrutura do projeto
 
