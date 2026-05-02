@@ -49,10 +49,10 @@ touch agents/orchestrator/agent.py
 
 from google.adk.agents import Agent
 
-from agents.profile_agent.agent import profile_agent
-from agents.rag_agent.agent import rag_agent
-from agents.market_agent.agent import market_agent
-from agents.report_agent.agent import report_agent
+from profile_agent.agent import profile_agent
+from rag_agent.agent import rag_agent
+from market_agent.agent import market_agent
+from report_agent.agent import report_agent
 
 orchestrator = Agent(
     name="orchestrator",
@@ -99,16 +99,19 @@ root_agent = orchestrator
 # main.py
 
 import os
+import sys
 import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "agents"))
+
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai.types import Content, Part
 
-from agents.orchestrator import root_agent
+from orchestrator import root_agent
 
 
 async def main():
@@ -248,14 +251,13 @@ gdg-workshop-build-ai-multiagents/
 │   └── report_agent/          # Bloco 3
 │       ├── __init__.py
 │       └── agent.py
-├── tools/
-│   ├── __init__.py
-│   ├── rag_tool.py            # Busca na base de conhecimento
-│   ├── market_tools.py        # yfinance, câmbio, Selic
-│   └── sheets_tool.py         # Exportação Google Sheets
-├── data/
-│   ├── __init__.py
-│   └── knowledge_base.py      # Base sobre investimentos
+│   ├── rag_agent/             # Bloco 2
+│   │   ├── tools/rag_tools.py
+│   │   └── data/knowledge_base.py
+│   ├── market_agent/          # Bloco 3
+│   │   └── tools/market_tools.py
+│   └── report_agent/          # Bloco 3
+│       └── tools/sheets_tool.py
 ├── docs/
 │   ├── BLOCO-1.md             # Google ADK + Agente de Perfil
 │   ├── BLOCO-2.md             # Agente RAG

@@ -21,7 +21,7 @@ O **Agent Development Kit (ADK)** é o framework do Google para construir agente
 ### Criando o ambiente
 
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/Ivi-SCD/gdg-workshop-build-ai-multiagents.git
 cd gdg-workshop-build-ai-multiagents
 
 python -m venv .venv
@@ -234,16 +234,19 @@ O agente deve fazer as perguntas, chamar a tool `classify_profile` automaticamen
 # test_agent.py
 
 import os
+import sys
 import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()
 
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "agents"))
+
 from google.adk.runners import Runner
 from google.adk.sessions import InMemorySessionService
 from google.genai.types import Content, Part
 
-from agents.profile_agent import root_agent
+from profile_agent import root_agent
 
 
 async def main():

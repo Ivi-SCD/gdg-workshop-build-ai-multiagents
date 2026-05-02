@@ -34,12 +34,12 @@ Pergunta do usuário
 ## 2.2 Criando a base de conhecimento
 
 ```bash
-mkdir -p data
-touch data/__init__.py
+mkdir -p agents/rag_agent/data
+touch agents/rag_agent/data/__init__.py
 ```
 
 ```python
-# data/knowledge_base.py
+# agents/rag_agent/data/knowledge_base.py
 
 KNOWLEDGE_BASE = [
     {
@@ -125,14 +125,14 @@ KNOWLEDGE_BASE = [
 ## 2.3 Criando a tool de busca
 
 ```bash
-mkdir -p tools
-touch tools/__init__.py
+mkdir -p agents/rag_agent/tools
+touch agents/rag_agent/tools/__init__.py
 ```
 
 ```python
-# tools/rag_tool.py
+# agents/rag_agent/tools/rag_tools.py
 
-from data.knowledge_base import KNOWLEDGE_BASE
+from ..data.knowledge_base import KNOWLEDGE_BASE
 
 
 def search_knowledge_base(query: str) -> dict:
@@ -187,7 +187,7 @@ touch agents/rag_agent/agent.py
 # agents/rag_agent/agent.py
 
 from google.adk.agents import Agent
-from tools.rag_tool import search_knowledge_base
+from .tools.rag_tools import search_knowledge_base
 
 rag_agent = Agent(
     name="rag_agent",

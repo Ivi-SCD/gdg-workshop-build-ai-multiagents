@@ -55,10 +55,14 @@ cp .env.example .env
 ## Estrutura do projeto
 
 ```
-├── agents/            # Código dos agentes
-├── tools/             # Ferramentas (tools) dos agentes
-├── docs/              # Guias passo a passo (BLOCO-*.md)
-├── main.py            # Entrypoint do sistema multi-agent
-├── requirements.txt   # Dependências
-└── .env.example       # Template de variáveis de ambiente
+├── agents/                # AGENTS_DIR — cada pasta é um agente
+│   ├── orchestrator/      # Agente orquestrador (Bloco 4)
+│   ├── profile_agent/     # Agente de perfil de investidor (Bloco 1)
+│   ├── rag_agent/         # Agente RAG + tools/ + data/ (Bloco 2)
+│   ├── market_agent/      # Agente de mercado + tools/ (Bloco 3)
+│   └── report_agent/      # Agente de relatório + tools/ (Bloco 3)
+├── docs/                  # Guias passo a passo (BLOCO-*.md)
+├── main.py                # Entrypoint do sistema multi-agent
+├── requirements.txt       # Dependências
+└── .env.example           # Template de variáveis de ambiente
 ```

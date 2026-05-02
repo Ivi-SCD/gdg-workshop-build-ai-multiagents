@@ -18,8 +18,13 @@ Todas são gratuitas e não precisam de cadastro — perfeitas para o workshop.
 
 ### 3.2 Criando as tools de mercado
 
+```bash
+mkdir -p agents/market_agent/tools
+touch agents/market_agent/tools/__init__.py
+```
+
 ```python
-# tools/market_tools.py
+# agents/market_agent/tools/market_tools.py
 
 import requests
 import yfinance as yf
@@ -162,7 +167,7 @@ touch agents/market_agent/agent.py
 # agents/market_agent/agent.py
 
 from google.adk.agents import Agent
-from tools.market_tools import get_stock_quote, get_stock_history, get_currency_rate, get_selic_rate
+from .tools.market_tools import get_stock_quote, get_stock_history, get_currency_rate, get_selic_rate
 
 market_agent = Agent(
     name="market_agent",
@@ -247,8 +252,13 @@ GOOGLE_SHEETS_SPREADSHEET_ID=cole-o-id-da-sua-planilha-aqui
 
 ### 3.6 Criando a tool do Google Sheets
 
+```bash
+mkdir -p agents/report_agent/tools
+touch agents/report_agent/tools/__init__.py
+```
+
 ```python
-# tools/sheets_tool.py
+# agents/report_agent/tools/sheets_tool.py
 
 import os
 from datetime import datetime
@@ -359,7 +369,7 @@ touch agents/report_agent/agent.py
 # agents/report_agent/agent.py
 
 from google.adk.agents import Agent
-from tools.sheets_tool import export_report_to_sheets, list_reports
+from .tools.sheets_tool import export_report_to_sheets, list_reports
 
 report_agent = Agent(
     name="report_agent",
