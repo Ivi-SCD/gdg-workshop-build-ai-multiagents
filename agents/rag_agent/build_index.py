@@ -18,7 +18,7 @@ from pypdf import PdfReader
 load_dotenv()
 
 PDFS_DIR = os.path.join(os.path.dirname(__file__), "pdfs")
-CHROMA_DIR = os.path.join(os.path.dirname(__file__), "chroma_db")
+CHROMA_DIR = os.path.join(os.path.dirname(__file__), "data/chroma_db")
 COLLECTION_NAME = "investments"
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 100

@@ -106,6 +106,17 @@ agents/rag_agent/
 
 ## 2.4 Criando a base de conhecimento (PDFs)
 
+
+- Crie a base de PDFs:
+```
+python agents/rag_agent/create_sample_pdfs.py
+```
+
+- Crie os Índices:
+```
+python agents/rag_agent/build_index.py
+```
+
 Os PDFs já vêm no repositório com conteúdo denso sobre investimentos brasileiros. Cada guia cobre um tema em profundidade:
 
 | PDF | Conteúdo |
