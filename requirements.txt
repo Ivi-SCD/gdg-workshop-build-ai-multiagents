@@ -1,12 +1,9 @@
 google-adk
 google-genai
 python-dotenv
-<<<<<<< HEAD
-=======
 gspread
 google-auth
 requests
 yfinance
 chromadb
 pypdf
->>>>>>> 5364952ad1c1bcf54fa6c18f8eae940d178abc1c
