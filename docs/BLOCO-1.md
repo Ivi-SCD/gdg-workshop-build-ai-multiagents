@@ -74,8 +74,10 @@ No ADK, cada agente é um **módulo Python** dentro de uma pasta com um `__init_
 ```
 agents/
 └── profile_agent/
-    ├── __init__.py    # Exporta root_agent
-    └── agent.py       # Define o agente
+    ├── __init__.py          # Exporta root_agent
+    ├── agent.py             # Define o agente e importa as tools
+    └── tools/
+        └── classify_profile_tools.py  # Implementação das tools
 ```
 
 Conceitos fundamentais:
@@ -84,7 +86,7 @@ Conceitos fundamentais:
 |----------|-----------|
 | `Agent` | Unidade básica — tem nome, modelo, instruções e tools |
 | `instruction` | System prompt — define personalidade e comportamento |
-| `tools` | Funções Python que o agente pode chamar |
+| `tools` | Funções Python que o modelo pode chamar; normalmente ficam em arquivos dentro de `tools/` |
 | `Runner` | Executa o agente e gerencia a conversação |
 | `Session` | Mantém o histórico de uma conversa |
 | `adk web` | Interface web para testar agentes visualmente |
@@ -95,22 +97,26 @@ Nosso primeiro agente vai avaliar o perfil de risco do usuário (conservador, mo
 
 ### Passo 1 — Ajustar a estrutura de pastas
 
-Se você já tem a pasta `profile_agent`, crie apenas a pasta `agents` e mova `profile_agent` para dentro dela:
+Se você já tem a pasta `profile_agent`, crie a estrutura do agente com um subdiretório `tools` dentro dela e adicione o agente a pasta `agents`:
 
 ```bash
-mkdir -p agents
+mkdir -p agents/profile_agent/tools
 mv profile_agent agents/
+```
+
+Se você ainda não tiver criado `profile_agent`, crie a estrutura completa:
+
+```bash
+mkdir -p agents/profile_agent/tools
 ```
 
 
 ### Passo 2 — Definir a tool de classificação
 
-A tool é uma função Python comum. O ADK usa o docstring e as type hints para gerar o schema que o modelo Gemini vai usar para chamar a função.
+A tool é uma função Python comum e deve ser implementada dentro do diretório `tools/`. O ADK usa o docstring e as type hints para gerar o schema que o modelo Gemini vai usar para chamar a função.
 
 ```python
-# agents/profile_agent/agent.py
-
-from google.adk.agents.llm_agent import Agent
+# agents/profile_agent/tools/classify_profile_tools.py
 
 
 def classify_profile(
@@ -171,10 +177,13 @@ def classify_profile(
 
 ### Passo 3 — Definir o agente
 
-Adicione o agente no mesmo arquivo, logo após a tool:
+No arquivo `agents/profile_agent/agent.py`, importe a tool do diretório `tools/` e defina o agente:
 
 ```python
-# agents/profile_agent/agent.py (continuação)
+# agents/profile_agent/agent.py
+
+from google.adk.agents.llm_agent import Agent
+from .tools.classify_profile_tools import classify_profile
 
 profile_agent = Agent(
     name="profile_agent",
