@@ -14,7 +14,7 @@ Neste bloco vamos construir dois agentes: um que consulta dados de mercado em te
 | **AwesomeAPI** | Cotação de câmbio (USD, EUR, BTC) | Não |
 | **Banco Central (BCB)** | Taxa Selic | Não |
 
-Todas são gratuitas e não precisam de cadastro — perfeitas para o workshop.
+Todas são gratuitas e não precisam de cadastro.
 
 ### 3.2 Criando as tools de mercado
 
