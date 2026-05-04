@@ -5,3 +5,5 @@ __pycache__/
 .adk/
 credentials.json
 .claude
+agents/rag_agent/data/pdfs/
+agents/rag_agent/data/chroma_db/
