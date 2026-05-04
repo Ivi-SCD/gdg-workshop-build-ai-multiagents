@@ -2,24 +2,26 @@ import os
 from datetime import datetime
 
 import gspread
-import google.auth
 
 
 def _get_sheets_client():
-    """Cria o cliente autenticado do Google Sheets usando ADC ou service account."""
-    scopes = [
-        "https://www.googleapis.com/auth/spreadsheets",
-        "https://www.googleapis.com/auth/drive",
-    ]
+    """Cria o cliente autenticado do Google Sheets via OAuth2 desktop flow."""
+    creds_file = os.getenv("GOOGLE_SHEETS_CREDENTIALS", "credentials.json")
 
-    creds_file = os.getenv("GOOGLE_SHEETS_CREDENTIALS")
-    if creds_file and os.path.exists(creds_file):
-        from google.oauth2.service_account import Credentials
-        creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
-    else:
-        creds, _ = google.auth.default(scopes=scopes)
+    if os.path.exists(creds_file):
+        return gspread.service_account(filename=creds_file)
 
-    return gspread.authorize(creds)
+    oauth_creds = os.getenv("GOOGLE_OAUTH_CREDENTIALS", "oauth_credentials.json")
+    if os.path.exists(oauth_creds):
+        return gspread.oauth(
+            credentials_filename=oauth_creds,
+            authorized_user_filename="authorized_user.json",
+        )
+
+    raise FileNotFoundError(
+        "Nenhum arquivo de credenciais encontrado. "
+        "Coloque 'oauth_credentials.json' (OAuth Client ID) ou 'credentials.json' (Service Account) na raiz do projeto."
+    )
 
 
 def export_report_to_sheets(
