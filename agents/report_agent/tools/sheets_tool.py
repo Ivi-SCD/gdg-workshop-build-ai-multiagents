@@ -2,6 +2,9 @@ import os
 from datetime import datetime
 
 import gspread
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def _get_sheets_client():
