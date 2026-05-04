@@ -2,17 +2,23 @@ import os
 from datetime import datetime
 
 import gspread
-from google.oauth2.service_account import Credentials
+import google.auth
 
 
 def _get_sheets_client():
-    """Cria o cliente autenticado do Google Sheets."""
-    creds_file = os.getenv("GOOGLE_SHEETS_CREDENTIALS", "credentials.json")
+    """Cria o cliente autenticado do Google Sheets usando ADC ou service account."""
     scopes = [
         "https://www.googleapis.com/auth/spreadsheets",
         "https://www.googleapis.com/auth/drive",
     ]
-    creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
+
+    creds_file = os.getenv("GOOGLE_SHEETS_CREDENTIALS")
+    if creds_file and os.path.exists(creds_file):
+        from google.oauth2.service_account import Credentials
+        creds = Credentials.from_service_account_file(creds_file, scopes=scopes)
+    else:
+        creds, _ = google.auth.default(scopes=scopes)
+
     return gspread.authorize(creds)
 
 
