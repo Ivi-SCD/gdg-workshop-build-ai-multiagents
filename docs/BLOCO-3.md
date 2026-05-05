@@ -171,7 +171,7 @@ from .tools.market_tools import get_stock_quote, get_stock_history, get_currency
 
 market_agent = Agent(
     name="market_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="Agente que consulta dados de mercado em tempo real: cotações de ações, câmbio e taxas de juros.",
     instruction="""
     Você é um agente especializado em dados de mercado financeiro.
@@ -373,7 +373,7 @@ from .tools.sheets_tool import export_report_to_sheets, list_reports
 
 report_agent = Agent(
     name="report_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="Agente que gera relatórios consolidados de investimentos e exporta para Google Sheets.",
     instruction="""
     Você é um agente especializado em gerar relatórios de investimentos.
