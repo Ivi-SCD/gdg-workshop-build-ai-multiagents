@@ -1,5 +1,5 @@
 from google.adk.agents import Agent
-from google.adk.tools import google_search
+
 
 from profile_agent.agent import profile_agent
 from rag_agent.agent import rag_agent
@@ -23,8 +23,6 @@ orchestrator = Agent(
 
     4. **report_agent**: Para gerar relatórios consolidados e exportar para Google Sheets. Use quando o usuário pedir para salvar, exportar ou gerar relatório. Ao delegar para o report_agent, passe TODOS os dados coletados nas etapas anteriores de forma resumida na sua mensagem de transferência.
 
-    5. **search_agent** (sub-agente do rag_agent): Busca informações na web. O rag_agent já delega automaticamente para ele quando não encontra na base de conhecimento.
-
     REGRAS IMPORTANTES:
     - Quando o usuário pedir múltiplas coisas (explicar + buscar dados + salvar), você DEVE executar TODAS as etapas em sequência. NÃO pare após completar apenas parte do pedido.
     - Após receber a resposta de um sub-agente, verifique se ainda há etapas pendentes e delegue imediatamente para o próximo agente.
@@ -32,7 +30,6 @@ orchestrator = Agent(
     - Para ações e FIIs brasileiros, sempre use sufixo .SA (ex: VILG11.SA, CPTS11.SA)
     - Inclua o disclaimer de que as informações são educacionais
     - Quando o usuário pedir "gerar análise", "analisar", ou algo semelhante, SEMPRE finalize delegando ao report_agent para exportar o relatório para Google Sheets, mesmo que o usuário não peça explicitamente para salvar.
-    - Se o rag_agent não souber responder uma pergunta, delegue ao search_agent para buscar na web.
     - NUNCA encerre a conversa sem completar TODAS as etapas solicitadas. Se o usuário pediu análise + relatório, garanta que o report_agent foi chamado e retornou o link da planilha.
   """,
     sub_agents=[profile_agent, rag_agent, market_agent, report_agent],

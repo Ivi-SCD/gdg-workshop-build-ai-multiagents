@@ -18,14 +18,14 @@ No Google ADK, um agente pode ter **sub_agents**. O agente pai (orquestrador) de
     │  Perfil   │ │   RAG   │ │  Mercado   │ │ Relatório  │
     │ Investidor│ │         │ │            │ │ + Sheets   │
     └───────────┘ └─────────┘ └────────────┘ └────────────┘
-     classify_     search_      get_stock_     export_report_
-     profile()     knowledge_   quote()        to_sheets()
-                   base()       get_stock_     list_reports()
-                                history()
-                                get_currency_
-                                rate()
-                                get_selic_
-                                rate()
+     classify_     search_       get_stock_     export_report_
+     profile()     knowledge_    quote()        to_sheets()
+                   base()        get_stock_     list_reports()
+                                 history()
+                                 get_currency_
+                                 rate()
+                                 get_selic_
+                                 rate()
 ```
 
 O fluxo:
