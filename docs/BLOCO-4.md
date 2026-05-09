@@ -40,8 +40,6 @@ O fluxo:
 
 ```bash
 mkdir -p agents/orchestrator
-touch agents/orchestrator/__init__.py
-touch agents/orchestrator/agent.py
 ```
 
 ```python
@@ -56,7 +54,7 @@ from report_agent.agent import report_agent
 
 orchestrator = Agent(
     name="orchestrator",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="Orquestrador do sistema de análise de investimentos.",
     instruction="""
     Você é o orquestrador de um sistema multi-agent de análise de investimentos.
