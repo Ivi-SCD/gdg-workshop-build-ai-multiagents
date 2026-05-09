@@ -34,10 +34,11 @@ pip install -r requirements.txt
 ### Criando sua API Key
 
 1. Acesse [aistudio.google.com](https://aistudio.google.com/)
-2. No menu lateral, clique em **"Get API Key"**
-3. Clique em **"Create API Key"**
-4. Selecione ou crie um projeto no Google Cloud
-5. Copie a key gerada
+2. No menu lateral, clique em **"Dashboard"**
+3.  No menu lateral, clique em **"API Key"**
+4. Clique em **"Create API Key"**
+5. Selecione ou crie um projeto no Google Cloud
+6. Copie a key gerada
 
 ```bash
 cp .env.example .env
@@ -101,7 +102,8 @@ Se você já tem a pasta `profile_agent`, crie a estrutura do agente com um subd
 
 ```bash
 mkdir -p agents/profile_agent/tools
-mv profile_agent agents/
+mv profile_agent/* agents/profile_agent/
+rmdir profile_agent
 ```
 
 Se você ainda não tiver criado `profile_agent`, crie a estrutura completa:
