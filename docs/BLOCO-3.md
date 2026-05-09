@@ -20,7 +20,6 @@ Todas são gratuitas e não precisam de cadastro — perfeitas para o workshop.
 
 ```bash
 mkdir -p agents/market_agent/tools
-touch agents/market_agent/tools/__init__.py
 ```
 
 ```python
@@ -157,12 +156,6 @@ def get_selic_rate() -> dict:
 
 ### 3.3 Criando o agente de mercado
 
-```bash
-mkdir -p agents/market_agent
-touch agents/market_agent/__init__.py
-touch agents/market_agent/agent.py
-```
-
 ```python
 # agents/market_agent/agent.py
 
@@ -171,7 +164,7 @@ from .tools.market_tools import get_stock_quote, get_stock_history, get_currency
 
 market_agent = Agent(
     name="market_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="Agente que consulta dados de mercado em tempo real: cotações de ações, câmbio e taxas de juros.",
     instruction="""
     Você é um agente especializado em dados de mercado financeiro.
@@ -227,14 +220,15 @@ Selecione **market_agent** e teste:
 
 1. Acesse o [Google Cloud Console](https://console.cloud.google.com/)
 2. Selecione seu projeto
-3. Vá em **APIs & Services > Enable APIs** e habilite:
+3. Selecione o Menu Hambúrguer
+4. Vá em **APIs & Services > Enable APIs** e habilite:
    - **Google Sheets API**
    - **Google Drive API**
-4. Vá em **APIs & Services > Credentials**
-5. Clique em **Create Credentials > Service Account**
-6. Dê um nome (ex: `workshop-sheets`) e clique em **Done**
-7. Clique na service account > **Keys > Add Key > Create new key > JSON**
-8. Salve o arquivo como `credentials.json` na raiz do projeto
+5. Vá em **APIs & Services > Credentials**
+6. Clique em **Create Credentials > Service Account**
+7. Dê um nome (ex: `workshop-sheets`) e clique em **Done**
+8. Clique na service account > **Keys > Add Key > Create new key > JSON**
+9. Salve o arquivo como `credentials.json` na raiz do projeto
 
 #### Passo 2 — Compartilhar a planilha
 
@@ -254,11 +248,10 @@ GOOGLE_SHEETS_SPREADSHEET_ID=cole-o-id-da-sua-planilha-aqui
 
 ```bash
 mkdir -p agents/report_agent/tools
-touch agents/report_agent/tools/__init__.py
 ```
 
 ```python
-# agents/report_agent/tools/sheets_tool.py
+# agents/report_agent/tools/sheets_tools.py
 
 import os
 from datetime import datetime
@@ -359,21 +352,15 @@ def list_reports() -> dict:
 
 ### 3.7 Criando o agente de relatório
 
-```bash
-mkdir -p agents/report_agent
-touch agents/report_agent/__init__.py
-touch agents/report_agent/agent.py
-```
-
 ```python
 # agents/report_agent/agent.py
 
 from google.adk.agents import Agent
-from .tools.sheets_tool import export_report_to_sheets, list_reports
+from .tools.sheets_tools import export_report_to_sheets, list_reports
 
 report_agent = Agent(
     name="report_agent",
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     description="Agente que gera relatórios consolidados de investimentos e exporta para Google Sheets.",
     instruction="""
     Você é um agente especializado em gerar relatórios de investimentos.
