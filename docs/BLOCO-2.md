@@ -77,7 +77,8 @@ O **ChromaDB** é um banco de dados vetorial que:
 - Faz busca por similaridade de cosseno de forma eficiente (HNSW index)
 - Persiste em disco (sobrevive restarts)
 
-## 2.3 Estrutura do projeto
+## 2.3 Estrutura do projeto 
+> Esta arquitetura abaixo ainda não existe no seu atual projeto mas terá a seguinte estrutura na finalização deste bloco
 
 ```
 agents/rag_agent/
@@ -106,7 +107,14 @@ agents/rag_agent/
 
 ## 2.4 Criando a base de conhecimento (PDFs)
 
-Os PDFs devem ser criado através desse script abaixo (ATENÇÃO EXECUTAR)
+Os PDFs devem ser criado através desse script abaixo (ATENÇÃO EXECUTAR).
+
+1. Crie a pasta `/rag_agent` junto ao restante dos agentes no diretório `/agent`
+2. Crie a pasta `/data` dentro de `rag_agent`
+3. Crie o arquivo `create_sample_pdfs.py`
+4. Copie e Cole neste arquivo o script abaixo
+5. Rode o script `python agents/rag_agent/data/create_sample_pdfs.py`
+
 
 ```python
 """
@@ -114,6 +122,8 @@ Script para gerar PDFs de amostra com conteúdo educacional sobre investimentos.
 Rode uma vez para criar os PDFs em agents/rag_agent/pdfs/.
 Dependência: pip install fpdf2
 """
+
+# rag_agent/data/creatE_sample_pdfs.py
 
 import os
 from fpdf import FPDF
@@ -1423,10 +1433,6 @@ Cada guia cobre um tema em profundidade:
 ## 2.5 Pipeline de indexação (build_index.py)
 
 Este script roda **uma única vez** para processar os PDFs e criar o índice vetorial.
-
-```bash
-mkdir -p agents/rag_agent/data
-```
 
 ```python
 # agents/rag_agent/data/build_index.py
